@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project version="2">
+  <!-- Output SWF options -->
+  <output>
+    <movie outputType="Application" />
+    <movie input="" />
+    <movie path="DispersionReticle.swf" />
+    <movie fps="24" />
+    <movie width="640" />
+    <movie height="480" />
+    <movie version="14" />
+    <movie minorVersion="0" />
+    <movie platform="Flash Player" />
+    <movie background="#FFFFFF" />
+  </output>
+  <!-- Other classes to be compiled into your SWF -->
+  <classpaths>
+    <class path="src" />
+  </classpaths>
+  <!-- Build options -->
+  <build>
+    <option optimize="True" />
+    <option showActionScriptWarnings="True" />
+    <option strict="True" />
+    <option infer="False" />
+    <option useNetwork="True" />
+    <option useResourceBundleMetadata="True" />
+    <option warnings="True" />
+    <option verboseStackTraces="False" />
+    <option linkReport="" />
+    <option loadExterns="" />
+    <option staticLinkRSL="True" />
+    <option additional="" />
+    <option compilerConstants="" />
+    <option minorVersion="" />
+    <option locale="" />
+  </build>
+  <!-- SWC Include Libraries -->
+  <includeLibraries />
+  <!-- SWC Libraries -->
+  <libraryPaths>
+    <element path="..\libs" />
+  </libraryPaths>
+  <!-- External Libraries -->
+  <externalLibraryPaths />
+  <!-- RSS -->
+  <rssFeeds />
+  <!-- Class files to compile (other referenced classes will automatically be included) -->
+  <compileTargets>
+    <compile path="src\com\dispersionreticle\DispersionReticleInjector.as" />
+  </compileTargets>
+  <!-- Paths to exclude from the Project Explorer tree -->
+  <hiddenPaths />
+  <!-- Executed before build -->
+  <preBuildCommand />
+  <!-- Executed after build -->
+  <postBuildCommand alwaysRun="False" />
+  <!-- Other project options -->
+  <options>
+    <option showHiddenPaths="False" />
+    <option testMovie="Default" />
+    <option testMovieCommand="" />
+  </options>
+  <!-- Plugin storage -->
+  <storage />
+</project>

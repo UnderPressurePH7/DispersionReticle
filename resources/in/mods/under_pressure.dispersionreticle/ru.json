@@ -1,0 +1,20 @@
+{
+    "modname": "Dispersion Reticle",
+    "checked": "включено",
+    "unchecked": "выключено",
+    "defaultValue": "по умолчанию",
+    "reductionStyle.new": "Новый (шкала прогресса)",
+    "reductionStyle.old": "Старый (слайдер)",
+    "circleEnabled.header": "Сфокусированный круг рассеивания",
+    "circleEnabled.body": "Показывать дополнительный прицел, который всегда отображает полностью сведённый размер рассеивания",
+    "reticleSizeEnabled.header": "Коррекция размера прицела",
+    "reticleSizeEnabled.body": "Включить коррекцию размера прицела для точного отображения рассеивания",
+    "reticleSizePercent.header": "Множитель размера прицела",
+    "reticleSizePercent.body": "0.0 = точный (реальный) размер, 1.0 = стандартный размер WoT",
+    "reductionEnabled.header": "Индикатор сведения",
+    "reductionEnabled.body": "Показывать индикатор сведения прицела",
+    "reductionStyle.header": "Стиль индикатора",
+    "reductionStyle.body": "Визуальный стиль индикатора сведения",
+    "reduction.aimed": "СВЕДЁН",
+    "reduction.sec": "с"
+}

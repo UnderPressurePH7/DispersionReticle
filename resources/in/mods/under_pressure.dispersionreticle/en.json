@@ -1,0 +1,20 @@
+{
+    "modname": "Dispersion Reticle",
+    "checked": "enabled",
+    "unchecked": "disabled",
+    "defaultValue": "default",
+    "reductionStyle.new": "New (progress bar)",
+    "reductionStyle.old": "Old (slider)",
+    "circleEnabled.header": "Focused dispersion circle",
+    "circleEnabled.body": "Show additional reticle that always displays the fully-aimed dispersion size",
+    "reticleSizeEnabled.header": "Reticle size correction",
+    "reticleSizeEnabled.body": "Enable reticle size correction for accurate dispersion display",
+    "reticleSizePercent.header": "Reticle size multiplier",
+    "reticleSizePercent.body": "0.0 = accurate (real) size, 1.0 = default WoT size",
+    "reductionEnabled.header": "Reduction indicator",
+    "reductionEnabled.body": "Show aiming reduction (convergence) indicator",
+    "reductionStyle.header": "Indicator style",
+    "reductionStyle.body": "Visual style of the reduction indicator",
+    "reduction.aimed": "AIMED",
+    "reduction.sec": "s"
+}
