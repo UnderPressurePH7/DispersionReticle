@@ -8,6 +8,7 @@ package com.dispersionreticle.reduction
 
     public class ReductionPanelNew extends Sprite
     {
+        private var _hitShape:Shape;
         private var _barShape:Shape;
         private var _ticksShape:Shape;
         private var _percentText:TextField;
@@ -17,6 +18,10 @@ package com.dispersionreticle.reduction
         private var _barHeight:Number = 100;
         private var _tickCount:int = 20;
 
+        private static const HIT_PADDING_X:Number = 25;
+        private static const HIT_PADDING_TOP:Number = 28;
+        private static const HIT_PADDING_BOTTOM:Number = 28;
+
         private static const COLOR_RED:uint = 0xCC0000;
         private static const COLOR_YELLOW:uint = 0xCCCC00;
         private static const COLOR_GREEN:uint = 0x00CC00;
@@ -24,6 +29,17 @@ package com.dispersionreticle.reduction
         public function ReductionPanelNew()
         {
             super();
+
+            _hitShape = new Shape();
+            _hitShape.graphics.beginFill(0x000000, 0);
+            _hitShape.graphics.drawRect(
+                -HIT_PADDING_X,
+                -HIT_PADDING_TOP,
+                _barWidth + HIT_PADDING_X * 2,
+                _barHeight + HIT_PADDING_TOP + HIT_PADDING_BOTTOM
+            );
+            _hitShape.graphics.endFill();
+            addChild(_hitShape);
 
             _barShape = new Shape();
             addChild(_barShape);

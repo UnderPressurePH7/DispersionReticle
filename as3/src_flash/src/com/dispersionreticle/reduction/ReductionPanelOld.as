@@ -8,6 +8,7 @@ package com.dispersionreticle.reduction
 
     public class ReductionPanelOld extends Sprite
     {
+        private var _hitShape:Shape;
         private var _trackShape:Shape;
         private var _ticksShape:Shape;
         private var _sliderShape:Shape;
@@ -19,6 +20,10 @@ package com.dispersionreticle.reduction
         private var _tickWidthSmall:Number = 5;
         private var _tickWidthMain:Number = 8;
 
+        private static const HIT_PADDING_X:Number = 30;
+        private static const HIT_PADDING_TOP:Number = 30;
+        private static const HIT_PADDING_BOTTOM:Number = 30;
+
         private static const COLOR_RED:uint = 0xCC0000;
         private static const COLOR_YELLOW:uint = 0xCCCC00;
         private static const COLOR_GREEN:uint = 0x00CC00;
@@ -26,6 +31,17 @@ package com.dispersionreticle.reduction
         public function ReductionPanelOld()
         {
             super();
+
+            _hitShape = new Shape();
+            _hitShape.graphics.beginFill(0x000000, 0);
+            _hitShape.graphics.drawRect(
+                -HIT_PADDING_X,
+                -HIT_PADDING_TOP,
+                HIT_PADDING_X * 2 + _tickWidthMain + 4,
+                _trackHeight + HIT_PADDING_TOP + HIT_PADDING_BOTTOM
+            );
+            _hitShape.graphics.endFill();
+            addChild(_hitShape);
 
             _trackShape = new Shape();
             addChild(_trackShape);
