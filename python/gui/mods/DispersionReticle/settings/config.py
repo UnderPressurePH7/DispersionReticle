@@ -14,6 +14,18 @@ except ImportError:
 
 MOD_LINKAGE = 'me.under_pressure.dispersionreticle'
 
+_REDUCTION_OFFSET_KEY = 'reduction-offset'
+_DEFAULT_REDUCTION_OFFSET = [10, 10]
+
+
+def _toOffsetList(value, default):
+    try:
+        if isinstance(value, (list, tuple)) and len(value) >= 2:
+            return [int(value[0]), int(value[1])]
+    except (TypeError, ValueError):
+        pass
+    return list(default)
+
 
 class Config(object):
 
@@ -23,6 +35,8 @@ class Config(object):
         self.configFile = ConfigFile(self.configParams)
         self._loadedSuccessfully = False
         self._finalized = False
+        self._dirty = False
+        self.reductionOffset = list(_DEFAULT_REDUCTION_OFFSET)
         self.onConfigChanged = Event.Event()
 
         self._loadConfigFileToParams()
@@ -32,7 +46,25 @@ class Config(object):
 
     def fini(self):
         self._finalized = True
+        self.save()
         self.onConfigChanged.clear()
+
+    def updateReductionOffset(self, offset):
+        new = _toOffsetList(offset, _DEFAULT_REDUCTION_OFFSET)
+        if new == self.reductionOffset:
+            return
+        self.reductionOffset = new
+        self.configFile.setExtra(_REDUCTION_OFFSET_KEY, new)
+        self._dirty = True
+
+    def save(self):
+        if not self._dirty:
+            return
+        try:
+            self.configFile.save_config()
+            self._dirty = False
+        except Exception as e:
+            logger.error('[Config] save failed: %s', e)
 
     def _registerMod(self):
         if not g_modsSettingsApi:
@@ -148,6 +180,12 @@ class Config(object):
             if success:
                 self._loadedSuccessfully = True
 
+            self.reductionOffset = _toOffsetList(
+                self.configFile.getExtra(_REDUCTION_OFFSET_KEY),
+                _DEFAULT_REDUCTION_OFFSET
+            )
+            self.configFile.setExtra(_REDUCTION_OFFSET_KEY, list(self.reductionOffset))
+
             if not self.configFile.exists():
                 self.configFile.save_config()
 
@@ -156,3 +194,4 @@ class Config(object):
             configItems = self.configParams.items()
             for tokenName, param in configItems.items():
                 param.value = param.defaultValue
+            self.reductionOffset = list(_DEFAULT_REDUCTION_OFFSET)

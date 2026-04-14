@@ -21,10 +21,23 @@ class _DispersionControlMarkersFactory(_ControlMarkersFactory):
         return result
 
 
+_originalFactories = None
+
+
 def install():
+    global _originalFactories
+    _originalFactories = gm_factory._FACTORIES_COLLECTION
     gm_factory._FACTORIES_COLLECTION = (
         _DispersionControlMarkersFactory,
         _OptionalMarkersFactory,
         _EquipmentMarkersFactory
     )
     logger.debug('[gun_marker_factory_hooks] Installed')
+
+
+def uninstall():
+    global _originalFactories
+    if _originalFactories is not None:
+        gm_factory._FACTORIES_COLLECTION = _originalFactories
+        _originalFactories = None
+        logger.debug('[gun_marker_factory_hooks] Uninstalled')

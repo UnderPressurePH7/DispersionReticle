@@ -9,7 +9,9 @@ def install():
     @overrideIn(AvatarInputHandler.AvatarInputHandler)
     def updateClientGunMarker(func, self, gunMarkerInfo, supportMarkersInfo, relaxTime):
         func(self, gunMarkerInfo, supportMarkersInfo, relaxTime)
-        ctrl = self._AvatarInputHandler__curCtrl
+        ctrl = getattr(self, '_AvatarInputHandler__curCtrl', None)
+        if ctrl is None or not hasattr(ctrl, 'updateGunMarker'):
+            return
         for reticle in ReticleRegistry.ADDITIONAL_RETICLES:
             if reticle.isServerReticle():
                 continue

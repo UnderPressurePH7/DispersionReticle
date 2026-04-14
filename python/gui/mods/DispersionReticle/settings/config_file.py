@@ -10,6 +10,15 @@ class ConfigFile(object):
         self.configPath = os.path.join('mods', 'configs', 'under_pressure', 'dispersionreticle.json')
         self.configParams = configParams
         self._loadedConfigData = None
+        self._extras = {}
+
+    def setExtra(self, key, value):
+        self._extras[key] = value
+
+    def getExtra(self, key, default=None):
+        if self._loadedConfigData and key in self._loadedConfigData:
+            return self._loadedConfigData[key]
+        return self._extras.get(key, default)
 
     def _ensureConfigExists(self):
         try:
@@ -31,6 +40,9 @@ class ConfigFile(object):
 
             for tokenName, param in configItems.items():
                 configData[tokenName] = param.defaultValue
+
+            for k, v in self._extras.items():
+                configData[k] = v
 
             with open(self.configPath, 'w') as f:
                 json.dump(configData, f, indent=4, ensure_ascii=False)
@@ -98,6 +110,9 @@ class ConfigFile(object):
             configItems = self.configParams.items()
             for tokenName, param in configItems.items():
                 configData[tokenName] = param.value
+
+            for k, v in self._extras.items():
+                configData[k] = v
 
             with open(self.configPath, 'w') as f:
                 json.dump(configData, f, indent=4, ensure_ascii=False)

@@ -2,19 +2,12 @@
 import BigWorld
 from ..utils import logger
 
-try:
-    import Settings
-except ImportError:
-    Settings = None
-
 from frameworks.wulf import WindowLayer
 from gui.Scaleform.framework import g_entitiesFactories, ScopeTemplates, ViewSettings
 from gui.Scaleform.framework.entities.View import View
 from gui.Scaleform.framework.entities.BaseDAAPIComponent import BaseDAAPIComponent
 from gui.Scaleform.framework.managers.loaders import SFViewLoadParams
 from gui.shared.personality import ServicesLocator
-
-PREFS_SECTION = 'DispersionReticle'
 
 _INJECTOR_LINKAGE = 'DispersionReticleInjector'
 _COMPONENT_LINKAGE = 'DispersionReticleComponent'
@@ -189,47 +182,18 @@ class DispersionFlash(object):
         if self.isCreated():
             self._componentView.as_setInterfaceScale(scale)
 
-    def _readPrefInt(self, key, default=0):
-        try:
-            if Settings is None:
-                return default
-            prefs = Settings.g_instance.userPrefs
-            if prefs is None:
-                return default
-            section = prefs[PREFS_SECTION]
-            if section is None:
-                return default
-            return section.readInt(key, default)
-        except Exception:
-            return default
-
-    def _writePrefInt(self, key, value):
-        try:
-            if Settings is None:
-                return
-            prefs = Settings.g_instance.userPrefs
-            if prefs is None:
-                return
-            section = prefs[PREFS_SECTION]
-            if section is None:
-                prefs.createSection(PREFS_SECTION)
-                section = prefs[PREFS_SECTION]
-            section.writeInt(key, int(value))
-        except Exception as e:
-            logger.error('[DispersionFlash] Error writing pref %s: %s', key, e)
-
     def _loadPosition(self):
         try:
-            offsetX = self._readPrefInt('reductionOffX', 0)
-            offsetY = self._readPrefInt('reductionOffY', 0)
-            if self.isCreated() and (offsetX != 0 or offsetY != 0):
-                self._componentView.as_setReductionOffset(offsetX, offsetY)
+            from ..settings import g_config
+            offsetX, offsetY = g_config.reductionOffset
+            if self.isCreated():
+                self._componentView.as_setReductionOffset(int(offsetX), int(offsetY))
         except Exception as e:
             logger.error('[DispersionFlash] Error loading position: %s', e)
 
     def onDragEnd(self, offsetX, offsetY):
         try:
-            self._writePrefInt('reductionOffX', offsetX)
-            self._writePrefInt('reductionOffY', offsetY)
-        except Exception as e:
-            logger.error('[DispersionFlash] Error saving position: %s', e)
+            from ..settings import g_config
+            g_config.updateReductionOffset([int(offsetX), int(offsetY)])
+        except (TypeError, ValueError) as e:
+            logger.error('[DispersionFlash] Error processing drag end: %s', e)

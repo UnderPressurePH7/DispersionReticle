@@ -86,6 +86,17 @@ def _onKillCamStateChanged(state, *a, **kw):
     _pushVisibility()
 
 
+_STATS_EVENTS = ('FULL_STATS', 'FULL_STATS_QUEST_PROGRESS', 'FULL_STATS_PERSONAL_RESERVES', 'EVENT_STATS')
+
+
+def _iterStatsEvents():
+    from gui.shared.events import GameEvent
+    for name in _STATS_EVENTS:
+        ev = getattr(GameEvent, name, None)
+        if ev is not None:
+            yield ev
+
+
 def _subscribeBattleEvents():
     global _eventsSubscribed, _killCamCtrl
     if _eventsSubscribed:
@@ -94,7 +105,8 @@ def _subscribeBattleEvents():
         from gui.shared import g_eventBus, EVENT_BUS_SCOPE
         from gui.shared.events import GameEvent
         g_eventBus.addListener(GameEvent.GUI_VISIBILITY, _onGUIVisibility, scope=EVENT_BUS_SCOPE.BATTLE)
-        g_eventBus.addListener(GameEvent.FULL_STATS, _onFullStats, scope=EVENT_BUS_SCOPE.BATTLE)
+        for ev in _iterStatsEvents():
+            g_eventBus.addListener(ev, _onFullStats, scope=EVENT_BUS_SCOPE.BATTLE)
         _eventsSubscribed = True
     except Exception as e:
         logger.error('[crosshair_hooks] Error subscribing to event bus: %s', e)
@@ -133,7 +145,11 @@ def _unsubscribeBattleEvents():
             from gui.shared import g_eventBus, EVENT_BUS_SCOPE
             from gui.shared.events import GameEvent
             g_eventBus.removeListener(GameEvent.GUI_VISIBILITY, _onGUIVisibility, scope=EVENT_BUS_SCOPE.BATTLE)
-            g_eventBus.removeListener(GameEvent.FULL_STATS, _onFullStats, scope=EVENT_BUS_SCOPE.BATTLE)
+            for ev in _iterStatsEvents():
+                try:
+                    g_eventBus.removeListener(ev, _onFullStats, scope=EVENT_BUS_SCOPE.BATTLE)
+                except Exception:
+                    pass
         except Exception as e:
             logger.error('[crosshair_hooks] Error unsubscribing from event bus: %s', e)
         _eventsSubscribed = False
@@ -168,11 +184,11 @@ def _getAimingPercent():
     try:
         player = BigWorld.player()
         if player is None:
-            return 100.0
+            return None
 
         gunRotator = getattr(player, 'gunRotator', None)
         if gunRotator is None:
-            return 100.0
+            return None
 
         currentAngle = getattr(gunRotator, 'dispersionAngle', 0.0)
 
@@ -193,12 +209,19 @@ def _getAimingPercent():
         percent = (focusedAngle / currentAngle) * 100.0
         return max(0.0, min(100.0, percent))
 
-    except Exception:
-        return 100.0
+    except Exception as e:
+        logger.error('[crosshair_hooks] _getAimingPercent failed: %s', e)
+        return None
+
+
+_ACTIVE_INTERVAL = 0.1
+_IDLE_INTERVAL = 0.5
 
 
 def _periodicUpdate():
     global _updateCallbackId, _isPlayerDead
+
+    nextInterval = _IDLE_INTERVAL
 
     try:
         if (not _scalePushed) and _dispersionFlash is not None and _dispersionFlash.isCreated():
@@ -213,38 +236,42 @@ def _periodicUpdate():
             except Exception:
                 pass
 
-        if (g_configParams.reductionEnabled.value
-                and _dispersionFlash is not None
-                and _dispersionFlash.isCreated()
-                and _computeVisible()):
-            aimingPercent = _getAimingPercent()
-            from ..settings.translations import getTranslation
-            aimedLabel = getTranslation('reduction.aimed')
-            secSuffix = getTranslation('reduction.sec')
+        isActive = (g_configParams.reductionEnabled.value
+                    and _dispersionFlash is not None
+                    and _dispersionFlash.isCreated()
+                    and _computeVisible())
 
-            if aimingPercent >= 99.5:
-                timeLabel = ''
-            else:
-                try:
-                    player = BigWorld.player()
-                    aimingTime = player._PlayerAvatar__dispersionInfo[5]
-                    remaining = aimingTime * (1.0 - aimingPercent / 100.0)
-                    timeLabel = '%.1f %s' % (remaining, secSuffix)
-                except Exception:
+        if isActive:
+            nextInterval = _ACTIVE_INTERVAL
+            aimingPercent = _getAimingPercent()
+            if aimingPercent is not None:
+                from ..settings.translations import getTranslation
+                aimedLabel = getTranslation('reduction.aimed')
+                secSuffix = getTranslation('reduction.sec')
+
+                if aimingPercent >= 99.5:
                     timeLabel = ''
-            percentLabel = '%d%%' % int(aimingPercent)
-            _dispersionFlash.updateReduction(aimingPercent, timeLabel, percentLabel, aimedLabel)
+                else:
+                    try:
+                        player = BigWorld.player()
+                        aimingTime = player._PlayerAvatar__dispersionInfo[5]
+                        remaining = aimingTime * (1.0 - aimingPercent / 100.0)
+                        timeLabel = '%.1f %s' % (remaining, secSuffix)
+                    except Exception:
+                        timeLabel = ''
+                percentLabel = '%d%%' % int(aimingPercent)
+                _dispersionFlash.updateReduction(aimingPercent, timeLabel, percentLabel, aimedLabel)
 
     except Exception as e:
         logger.error('[crosshair_hooks] Error in periodicUpdate: %s', e)
 
-    _updateCallbackId = BigWorld.callback(0.1, _periodicUpdate)
+    _updateCallbackId = BigWorld.callback(nextInterval, _periodicUpdate)
 
 
 def _startPeriodicUpdate():
     global _updateCallbackId
     _stopPeriodicUpdate()
-    _updateCallbackId = BigWorld.callback(0.1, _periodicUpdate)
+    _updateCallbackId = BigWorld.callback(_ACTIVE_INTERVAL, _periodicUpdate)
 
 
 def _stopPeriodicUpdate():
@@ -280,6 +307,11 @@ def install():
             _unsubscribeBattleEvents()
             if _dispersionFlash is not None:
                 _dispersionFlash.destroy()
+            try:
+                from ..settings import g_config
+                g_config.save()
+            except Exception as e:
+                logger.error('[crosshair_hooks] Error flushing config: %s', e)
         except Exception as e:
             logger.error('[crosshair_hooks] Error in dispose: %s', e)
         return origFunc(self, *args, **kwargs)
@@ -288,6 +320,30 @@ def install():
     g_config.onConfigChanged += _onConfigChanged
 
     logger.debug('[crosshair_hooks] Installed')
+
+
+def uninstall():
+    global _dispersionFlash
+    try:
+        _stopPeriodicUpdate()
+    except Exception:
+        pass
+    try:
+        _unsubscribeBattleEvents()
+    except Exception:
+        pass
+    try:
+        from ..settings import g_config
+        g_config.onConfigChanged -= _onConfigChanged
+    except Exception:
+        pass
+    if _dispersionFlash is not None:
+        try:
+            _dispersionFlash.destroy()
+        except Exception:
+            pass
+        _dispersionFlash = None
+    logger.debug('[crosshair_hooks] Uninstalled')
 
 
 def _onConfigChanged():

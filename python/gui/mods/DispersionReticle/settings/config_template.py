@@ -14,7 +14,11 @@ class Template(object):
         return enabledParam.defaultValue if enabledParam else True
 
     def setModDisplayName(self, name):
-        self.modDisplayName = unicode(name) if hasattr(__builtins__, 'unicode') else str(name)
+        try:
+            _unicode = unicode
+        except NameError:
+            _unicode = str
+        self.modDisplayName = _unicode(name)
         return self
 
     def addToColumn1(self, item):
