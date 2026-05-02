@@ -7,6 +7,7 @@ _installedModules = []
 
 def _getHookModules():
     from . import gun_marker_factory_hooks
+    from . import gun_marker_components_hooks
     from . import data_provider_hooks
     from . import gun_marker_ctrl_hooks
     from . import crosshair_proxy_hooks
@@ -14,6 +15,7 @@ def _getHookModules():
     from . import crosshair_hooks
     return [
         gun_marker_factory_hooks,
+        gun_marker_components_hooks,
         data_provider_hooks,
         gun_marker_ctrl_hooks,
         crosshair_proxy_hooks,

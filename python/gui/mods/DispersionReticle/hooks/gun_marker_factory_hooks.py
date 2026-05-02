@@ -11,6 +11,9 @@ from ..utils import logger
 from ..utils.reticle_registry import ReticleRegistry
 
 
+_loggedFocusedCreateMethods = set()
+
+
 class _DispersionControlMarkersFactory(_ControlMarkersFactory):
 
     def _callBaseMarkers(self, createMethodName):
@@ -27,7 +30,15 @@ class _DispersionControlMarkersFactory(_ControlMarkersFactory):
         if createMethod is None:
             return result
 
-        return tuple(result) + tuple(createMethod(self, self._getMarkerType()))
+        focusedMarkers = tuple(createMethod(self, self._getMarkerType()))
+        if createMethodName not in _loggedFocusedCreateMethods:
+            _loggedFocusedCreateMethods.add(createMethodName)
+            logger.debug(
+                '[gun_marker_factory_hooks] Appended %s focused markers via %s',
+                len(focusedMarkers),
+                createMethodName
+            )
+        return tuple(result) + focusedMarkers
 
     def _createDefaultMarkers(self):
         result = self._callBaseMarkers('_createDefaultMarkers')
