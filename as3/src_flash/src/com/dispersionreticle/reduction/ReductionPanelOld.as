@@ -2,9 +2,10 @@ package com.dispersionreticle.reduction
 {
     import flash.display.Sprite;
     import flash.display.Shape;
+    import flash.filters.GlowFilter;
     import flash.text.TextField;
     import flash.text.TextFormat;
-    import flash.text.TextFieldAutoSize;
+    import flash.text.TextFormatAlign;
 
     public class ReductionPanelOld extends Sprite
     {
@@ -15,18 +16,24 @@ package com.dispersionreticle.reduction
         private var _percentText:TextField;
         private var _statusText:TextField;
 
-        private var _trackHeight:Number = 120;
-        private var _tickCount:int = 20;
-        private var _tickWidthSmall:Number = 5;
-        private var _tickWidthMain:Number = 8;
+        private static const TRACK_HEIGHT:Number = 118;
+        private static const TICK_COUNT:int = 24;
+        private static const TICK_SMALL:Number = 7;
+        private static const TICK_MEDIUM:Number = 11;
+        private static const TICK_MAIN:Number = 17;
 
-        private static const HIT_PADDING_X:Number = 30;
-        private static const HIT_PADDING_TOP:Number = 30;
+        private static const LABEL_WIDTH:Number = 90;
+        private static const STATUS_FONT_SIZE:int = 18;
+        private static const PERCENT_FONT_SIZE:int = 17;
+
+        private static const HIT_PADDING_X:Number = 42;
+        private static const HIT_PADDING_TOP:Number = 34;
         private static const HIT_PADDING_BOTTOM:Number = 30;
 
-        private static const COLOR_RED:uint = 0xCC0000;
-        private static const COLOR_YELLOW:uint = 0xCCCC00;
-        private static const COLOR_GREEN:uint = 0x00CC00;
+        private static const COLOR_TICK:uint = 0xE7DFC9;
+        private static const COLOR_TICK_DIM:uint = 0xAFA894;
+        private static const COLOR_YELLOW:uint = 0xFFD51A;
+        private static const COLOR_GREEN:uint = 0x22FF44;
 
         public function ReductionPanelOld()
         {
@@ -37,8 +44,8 @@ package com.dispersionreticle.reduction
             _hitShape.graphics.drawRect(
                 -HIT_PADDING_X,
                 -HIT_PADDING_TOP,
-                HIT_PADDING_X * 2 + _tickWidthMain + 4,
-                _trackHeight + HIT_PADDING_TOP + HIT_PADDING_BOTTOM
+                HIT_PADDING_X * 2,
+                TRACK_HEIGHT + HIT_PADDING_TOP + HIT_PADDING_BOTTOM
             );
             _hitShape.graphics.endFill();
             addChild(_hitShape);
@@ -52,23 +59,12 @@ package com.dispersionreticle.reduction
             _sliderShape = new Shape();
             addChild(_sliderShape);
 
-            var textFormat:TextFormat = new TextFormat();
-            textFormat.font = "$FieldFont";
-            textFormat.size = 13;
-            textFormat.bold = true;
-
-            _statusText = new TextField();
-            _statusText.defaultTextFormat = textFormat;
-            _statusText.autoSize = TextFieldAutoSize.CENTER;
-            _statusText.selectable = false;
-            _statusText.mouseEnabled = false;
+            _statusText = _createLabel(STATUS_FONT_SIZE);
+            _statusText.y = -31;
             addChild(_statusText);
 
-            _percentText = new TextField();
-            _percentText.defaultTextFormat = textFormat;
-            _percentText.autoSize = TextFieldAutoSize.CENTER;
-            _percentText.selectable = false;
-            _percentText.mouseEnabled = false;
+            _percentText = _createLabel(PERCENT_FONT_SIZE);
+            _percentText.y = TRACK_HEIGHT + 3;
             addChild(_percentText);
 
             _drawTrackAndTicks();
@@ -76,78 +72,95 @@ package com.dispersionreticle.reduction
 
         private function _drawTrackAndTicks():void
         {
-            // Thin vertical track line
             _trackShape.graphics.clear();
-            _trackShape.graphics.lineStyle(2, 0xCCCCCC, 0.7);
+            _trackShape.graphics.lineStyle(3, 0x000000, 0.55);
             _trackShape.graphics.moveTo(0, 0);
-            _trackShape.graphics.lineTo(0, _trackHeight);
+            _trackShape.graphics.lineTo(0, TRACK_HEIGHT);
+            _trackShape.graphics.lineStyle(1, COLOR_TICK, 0.75);
+            _trackShape.graphics.moveTo(0, 0);
+            _trackShape.graphics.lineTo(0, TRACK_HEIGHT);
 
-            // Horizontal ticks to the RIGHT of the track
             _ticksShape.graphics.clear();
-            var tickSpacing:Number = _trackHeight / _tickCount;
+            var tickSpacing:Number = TRACK_HEIGHT / TICK_COUNT;
 
-            for (var i:int = 0; i <= _tickCount; i++)
+            for (var i:int = 0; i <= TICK_COUNT; i++)
             {
-                var y:Number = _trackHeight - (i * tickSpacing);
-                var isMain:Boolean = (i % 5 == 0);
-                var tw:Number = isMain ? _tickWidthMain : _tickWidthSmall;
+                var y:Number = TRACK_HEIGHT - (i * tickSpacing);
+                var isMain:Boolean = (i % 6 == 0);
+                var isMedium:Boolean = (!isMain && i % 3 == 0);
+                var halfWidth:Number = isMain ? TICK_MAIN : (isMedium ? TICK_MEDIUM : TICK_SMALL);
                 var thickness:Number = isMain ? 2 : 1;
+                var alpha:Number = isMain ? 0.9 : (isMedium ? 0.72 : 0.48);
+                var tickColor:uint = isMain ? COLOR_TICK : COLOR_TICK_DIM;
 
-                _ticksShape.graphics.lineStyle(thickness, 0xCCCCCC, isMain ? 0.8 : 0.5);
-                _ticksShape.graphics.moveTo(2, y);
-                _ticksShape.graphics.lineTo(2 + tw, y);
+                _ticksShape.graphics.lineStyle(thickness + 1, 0x000000, 0.45);
+                _ticksShape.graphics.moveTo(-halfWidth, y + 1);
+                _ticksShape.graphics.lineTo(halfWidth, y + 1);
+
+                _ticksShape.graphics.lineStyle(thickness, tickColor, alpha);
+                _ticksShape.graphics.moveTo(-halfWidth, y);
+                _ticksShape.graphics.lineTo(halfWidth, y);
             }
         }
 
         public function setData(aimingPercent:Number, timeLabel:String, percentLabel:String, aimedLabel:String):void
         {
             var clampedPercent:Number = Math.max(0, Math.min(100, aimingPercent));
-            var color:uint = _getColorForPercent(clampedPercent);
-
-            // Slider indicator - horizontal line at current position
-            var sliderY:Number = _trackHeight - (_trackHeight * clampedPercent / 100.0);
+            var sliderY:Number = TRACK_HEIGHT - (TRACK_HEIGHT * clampedPercent / 100.0);
+            var sliderAlpha:Number = _getSliderAlpha(clampedPercent);
 
             _sliderShape.graphics.clear();
-            _sliderShape.graphics.lineStyle(3, color, _getSliderAlpha(clampedPercent));
-            _sliderShape.graphics.moveTo(-4, sliderY);
-            _sliderShape.graphics.lineTo(2 + _tickWidthMain, sliderY);
+            _sliderShape.graphics.lineStyle(4, 0x000000, 0.65);
+            _sliderShape.graphics.moveTo(-TICK_MAIN - 3, sliderY + 1);
+            _sliderShape.graphics.lineTo(TICK_MAIN + 3, sliderY + 1);
+            _sliderShape.graphics.lineStyle(2, COLOR_YELLOW, sliderAlpha);
+            _sliderShape.graphics.moveTo(-TICK_MAIN - 2, sliderY);
+            _sliderShape.graphics.lineTo(TICK_MAIN + 2, sliderY);
 
-            // Status text above
             if (clampedPercent >= 99.5)
             {
-                _statusText.textColor = COLOR_GREEN;
-                _statusText.text = aimedLabel;
+                _setLabel(_statusText, aimedLabel, COLOR_GREEN);
             }
             else
             {
-                _statusText.textColor = color;
-                _statusText.text = timeLabel;
+                _setLabel(_statusText, timeLabel, COLOR_GREEN);
             }
-            _statusText.x = -(_statusText.textWidth / 2);
-            _statusText.y = -22;
 
-            // Percent text below
-            _percentText.textColor = color;
-            _percentText.text = percentLabel;
-            _percentText.x = -(_percentText.textWidth / 2);
-            _percentText.y = _trackHeight + 4;
+            _setLabel(_percentText, percentLabel, COLOR_YELLOW);
+        }
+
+        private function _createLabel(size:int):TextField
+        {
+            var textFormat:TextFormat = new TextFormat();
+            textFormat.font = "$FieldFont";
+            textFormat.size = size;
+            textFormat.bold = true;
+            textFormat.align = TextFormatAlign.CENTER;
+
+            var label:TextField = new TextField();
+            label.defaultTextFormat = textFormat;
+            label.width = LABEL_WIDTH;
+            label.height = size + 8;
+            label.x = -LABEL_WIDTH / 2;
+            label.selectable = false;
+            label.mouseEnabled = false;
+            label.filters = [new GlowFilter(0x000000, 1.0, 2, 2, 8, 1)];
+            return label;
+        }
+
+        private function _setLabel(label:TextField, text:String, color:uint):void
+        {
+            label.text = (text != null) ? text : "";
+            label.textColor = color;
         }
 
         private function _getSliderAlpha(aimingPercent:Number):Number
         {
-            if (aimingPercent >= 100.0) return 0.6;
-            if (aimingPercent < 80.0) return 1.0;
-            return 1.0 - 0.4 * ((aimingPercent - 80.0) / 20.0);
+            if (aimingPercent >= 99.5) return 0.75;
+            return 1.0;
         }
 
-        private function _getColorForPercent(percent:Number):uint
-        {
-            if (percent < 50.0) return COLOR_RED;
-            if (percent < 85.0) return COLOR_YELLOW;
-            return COLOR_GREEN;
-        }
-
-        public function get panelWidth():Number { return _tickWidthMain + 10; }
-        public function get panelHeight():Number { return _trackHeight + 40; }
+        public function get panelWidth():Number { return TICK_MAIN * 2; }
+        public function get panelHeight():Number { return TRACK_HEIGHT + 42; }
     }
 }

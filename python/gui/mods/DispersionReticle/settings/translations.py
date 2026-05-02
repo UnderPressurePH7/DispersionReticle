@@ -16,7 +16,7 @@ class TranslationManager(object):
         self._translationCache = {}
         self._translationsLoaded = False
         self.fallbackLanguage = "en"
-        self.translationPathTemplate = "mods/under_pressure.DispersionReticle/{}.json"
+        self.translationPathTemplate = "mods/under_pressure.dispersionreticle/{}.json"
 
     def _safeJsonLoad(self, content, language):
         try:
