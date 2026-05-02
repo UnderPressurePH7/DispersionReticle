@@ -10,6 +10,9 @@ def install():
     @overrideIn(CrosshairDataProxy)
     def __setGunMarkerState(func, self, markerType, value):
         func(self, markerType, value)
+
+        if markerType == GUN_MARKER_TYPE.DUAL_ACC:
+            return
   
         isServerUpdate = (markerType == GUN_MARKER_TYPE.SERVER)
         for reticle in ReticleRegistry.ADDITIONAL_RETICLES:

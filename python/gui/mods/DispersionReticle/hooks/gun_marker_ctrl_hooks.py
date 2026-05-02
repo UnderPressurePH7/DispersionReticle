@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import BattleReplay
 from AvatarInputHandler import gun_marker_ctrl
 
 from ..utils import logger, overrideIn
@@ -26,5 +27,23 @@ def install():
         return WgDispersionGunMarkersDecorator(
             clientMarker, serverMarker, dualAccMarker, focusedClientController
         )
+
+    @overrideIn(gun_marker_ctrl)
+    def useServerGunMarker(func):
+        if BattleReplay.g_replayCtrl.isPlaying:
+            return False
+        return func()
+
+    @overrideIn(gun_marker_ctrl)
+    def useClientGunMarker(func):
+        if BattleReplay.g_replayCtrl.isPlaying:
+            return True
+        return func()
+
+    @overrideIn(gun_marker_ctrl)
+    def useDefaultGunMarkers(func):
+        if gun_marker_ctrl.useClientGunMarker() and gun_marker_ctrl.useServerGunMarker():
+            return False
+        return func()
 
     logger.debug('[gun_marker_ctrl_hooks] Installed')

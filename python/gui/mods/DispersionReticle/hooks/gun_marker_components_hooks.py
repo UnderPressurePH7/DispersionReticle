@@ -21,8 +21,6 @@ def _appendConstant(result, constName):
 def _buildPriority():
     result = []
 
-    # Lower index is rendered later after reverse sort, so keep focused on top.
-    _appendMarkerNames(result, ReticleRegistry.FOCUSED_CLIENT.markerNames)
     _appendMarkerNames(result, ReticleRegistry.VANILLA_CLIENT.markerNames)
 
     for constName in (
@@ -39,6 +37,8 @@ def _buildPriority():
             'LOW_CHARGE_SHOT_GUN_ARCADE_MARKER_NAME',
             'LOW_CHARGE_SHOT_GUN_SNIPER_MARKER_NAME'):
         _appendConstant(result, constName)
+
+    _appendMarkerNames(result, ReticleRegistry.FOCUSED_CLIENT.markerNames)
 
     return result
 
