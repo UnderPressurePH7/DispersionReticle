@@ -35,13 +35,65 @@ class VanillaReticle(object):
             self._standardDataProviderRW.__set__(self, _GunMarkersDPFactory._makeDefaultProvider())
         return self._standardDataProviderRW.__get__(self)
 
-    def createDefaultMarkers(self, gunMarkerFactory, markerType):
+    def _effectiveMarkerType(self, markerType):
         if markerType != GUN_MARKER_TYPE.UNDEFINED:
-            return (
-                gunMarkerFactory._createArcadeMarker(self._gunMarkerType, self.markerNames.arcadeGunMarkerName),
-                gunMarkerFactory._createSniperMarker(self._gunMarkerType, self.markerNames.sniperGunMarkerName)
-            )
+            return self._gunMarkerType
+        return GUN_MARKER_TYPE.UNDEFINED
+
+    def _createArcadeSniperMarkers(self, gunMarkerFactory, markerType, arcadeMarkerName, sniperMarkerName):
+        if arcadeMarkerName is None or sniperMarkerName is None:
+            return ()
+
+        effectiveMarkerType = self._effectiveMarkerType(markerType)
         return (
-            gunMarkerFactory._createArcadeMarker(GUN_MARKER_TYPE.UNDEFINED, self.markerNames.arcadeGunMarkerName),
-            gunMarkerFactory._createSniperMarker(GUN_MARKER_TYPE.UNDEFINED, self.markerNames.sniperGunMarkerName)
+            gunMarkerFactory._createArcadeMarker(effectiveMarkerType, arcadeMarkerName),
+            gunMarkerFactory._createSniperMarker(effectiveMarkerType, sniperMarkerName)
+        )
+
+    def createDefaultMarkers(self, gunMarkerFactory, markerType):
+        return self._createArcadeSniperMarkers(
+            gunMarkerFactory,
+            markerType,
+            self.markerNames.arcadeGunMarkerName,
+            self.markerNames.sniperGunMarkerName
+        )
+
+    def createDualGunMarkers(self, gunMarkerFactory, markerType):
+        return self._createArcadeSniperMarkers(
+            gunMarkerFactory,
+            markerType,
+            self.markerNames.dualGunArcadeGunMarkerName,
+            self.markerNames.dualGunSniperGunMarkerName
+        )
+
+    def createTwinGunMarkers(self, gunMarkerFactory, markerType):
+        return self._createArcadeSniperMarkers(
+            gunMarkerFactory,
+            markerType,
+            self.markerNames.twinGunArcadeGunMarkerName,
+            self.markerNames.twinGunSniperGunMarkerName
+        )
+
+    def createAccuracyGunMarkers(self, gunMarkerFactory, markerType):
+        return self._createArcadeSniperMarkers(
+            gunMarkerFactory,
+            markerType,
+            self.markerNames.accuracyGunArcadeGunMarkerName,
+            self.markerNames.accuracyGunSniperGunMarkerName
+        )
+
+    def createChargeGunMarkers(self, gunMarkerFactory, markerType):
+        return self._createArcadeSniperMarkers(
+            gunMarkerFactory,
+            markerType,
+            self.markerNames.chargeGunArcadeGunMarkerName,
+            self.markerNames.chargeGunSniperGunMarkerName
+        )
+
+    def createLowChargeShotGunMarkers(self, gunMarkerFactory, markerType):
+        return self._createArcadeSniperMarkers(
+            gunMarkerFactory,
+            markerType,
+            self.markerNames.lowChargeShotArcadeGunMarkerName,
+            self.markerNames.lowChargeShotSniperGunMarkerName
         )
