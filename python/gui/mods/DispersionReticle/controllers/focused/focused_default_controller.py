@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import BigWorld
 from AvatarInputHandler.gun_marker_ctrl import _MARKER_FLAG
 
 from ...utils import logger
@@ -35,3 +36,18 @@ class FocusedDefaultGunMarkerController(OverriddenDefaultGunMarkerController):
                 logger.error('[focused] Focused size calculation failed: %s', e)
                 _sizeErrorLogged = True
             return size
+
+    def _interceptPostUpdate(self, size):
+        try:
+            player = BigWorld.player()
+            if player is not None:
+                cache = getattr(player, '_mod_dataProviderSizeCache', None)
+                if cache is None:
+                    cache = {}
+                    player._mod_dataProviderSizeCache = cache
+                cache[id(self._dataProvider)] = BigWorld.time()
+        except Exception as e:
+            logger.error('[focused] _interceptPostUpdate cache write failed: %s', e)
+
+    def _shouldUpdateExtendedReticleSize(self):
+        return True

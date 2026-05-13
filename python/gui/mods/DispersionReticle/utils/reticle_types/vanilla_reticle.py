@@ -36,9 +36,7 @@ class VanillaReticle(object):
         return self._standardDataProviderRW.__get__(self)
 
     def _effectiveMarkerType(self, markerType):
-        if markerType != GUN_MARKER_TYPE.UNDEFINED:
-            return self._gunMarkerType
-        return GUN_MARKER_TYPE.UNDEFINED
+        return self._gunMarkerType
 
     def _createArcadeSniperMarkers(self, gunMarkerFactory, markerType, arcadeMarkerName, sniperMarkerName):
         if arcadeMarkerName is None or sniperMarkerName is None:
